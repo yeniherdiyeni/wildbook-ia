@@ -1908,7 +1908,10 @@ class SQLDatabaseController(object):
             # superkeys = [(col), (col1, col2, ...), ...],
             for columns in superkeys:
                 columns = ','.join(columns)
-                constraints.append(f'CONSTRAINT superkey UNIQUE ({columns})')
+                if not self.uri.startswith('postgres'):
+                    constraints.append(f'CONSTRAINT superkey UNIQUE ({columns})')
+            if self.uri.startswith('postgres'):
+                constraints.append(f'PRIMARY KEY ({columns})')
         return constraints
 
     def __make_column_definition(self, name: str, definition: str) -> str:
@@ -1921,7 +1924,7 @@ class SQLDatabaseController(object):
             self.uri.startswith('postgres')
             and definition.lower() == 'integer primary key'
         ):
-            definition = 'SERIAL PRIMARY KEY'
+            definition = 'SERIAL UNIQUE'
         return f'{name} {definition}'
 
     def _make_add_table_sqlstr(
