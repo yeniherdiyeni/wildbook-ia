@@ -172,6 +172,9 @@ class SQLExecutionContext(object):
         # Start SQL Transaction
 
         context.connection = context.db.connection
+        context.is_postgres = isinstance(
+            context.connection, psycopg2.extensions.connection
+        )
         try:
             context.cur = context.connection.cursor()  # HACK in a new cursor
         except lite.ProgrammingError:
@@ -200,6 +203,8 @@ class SQLExecutionContext(object):
     # @profile
     def execute_and_generate_results(context, params):
         """ helper for context statment """
+        if context.is_postgres:
+            context.operation = context.operation.replace('?', '%s')
         try:
             context.cur.execute(context.operation, params)
         except lite.Error as ex:
