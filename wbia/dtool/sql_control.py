@@ -2662,7 +2662,28 @@ class SQLDatabaseController(object):
         """
         # check if the table exists first. Throws an error if it does not exist.
         self.cur.execute('SELECT 1 FROM ' + tablename + ' LIMIT 1')
-        self.cur.execute("PRAGMA TABLE_INFO('" + tablename + "')")
+        if self.uri.startswith('postgres'):
+            self.cur.execute(
+                """SELECT
+                       row_number() over () - 1,
+                       column_name,
+                       data_type,
+                       is_nullable,
+                       column_default,
+                       column_name = (
+                           SELECT column_name
+                           FROM information_schema.table_constraints
+                           NATURAL JOIN information_schema.constraint_column_usage
+                           WHERE table_name = %s
+                           AND constraint_type = 'PRIMARY KEY'
+                           LIMIT 1
+                       ) AS pk
+                FROM information_schema.columns
+                WHERE table_name = %s;""",
+                (tablename, tablename),
+            )
+        else:
+            self.cur.execute("PRAGMA TABLE_INFO('" + tablename + "')")
         colinfo_list = self.cur.fetchall()
         colrichinfo_list = [SQLColumnRichInfo(*colinfo) for colinfo in colinfo_list]
         return colrichinfo_list
