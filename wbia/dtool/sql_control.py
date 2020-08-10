@@ -1828,9 +1828,17 @@ class SQLDatabaseController(object):
             'tablename': METADATA_TABLE_NAME,
             'columns': 'metadata_key, metadata_value',
         }
-        op_fmtstr = 'INSERT OR REPLACE INTO {tablename} ({columns}) VALUES (?, ?)'
+        if self.uri.startswith('postgres'):
+            op_fmtstr = """INSERT INTO {tablename}
+                    (metadata_key, metadata_value)
+                VALUES (%(key)s, %(value)s)
+                ON CONFLICT (metadata_key) DO UPDATE
+                    SET metadata_value = EXCLUDED.metadata_value"""
+            params = {'key': key, 'value': val}
+        else:
+            op_fmtstr = 'INSERT OR REPLACE INTO {tablename} ({columns}) VALUES (?, ?)'
+            params = [key, val]
         operation = op_fmtstr.format(**fmtkw)
-        params = [key, val]
         self.executeone(operation, params, verbose=False)
 
     @profile
