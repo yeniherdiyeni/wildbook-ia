@@ -14,6 +14,7 @@ from functools import partial
 from io import StringIO
 from os.path import join, exists, dirname, basename
 
+import psycopg2
 import six
 import utool as ut
 
@@ -502,9 +503,12 @@ class SQLDatabaseController(object):
 
     def connect(self):
         """Create a connection for the instance or use the existing connection"""
-        self._connection = lite.connect(
-            self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
-        )
+        if self.uri.startswith('postgres'):
+            self._connection = psycopg2.connect(self.uri)
+        else:
+            self._connection = lite.connect(
+                self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
+            )
         return self._connection
 
     @property
@@ -519,7 +523,7 @@ class SQLDatabaseController(object):
 
     def _create_connection(self):
         if self.fname == ':memory:':
-            uri = None
+            uri = ''
             connection = lite.connect(
                 ':memory:', detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
             )
