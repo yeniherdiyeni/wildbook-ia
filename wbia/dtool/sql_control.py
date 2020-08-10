@@ -991,6 +991,8 @@ class SQLDatabaseController(object):
         connection.close()
 
     def optimize(self):
+        if self.uri.startswith('postgres'):
+            return
         # http://web.utk.edu/~jplyon/sqlite/SQLite_optimization_FAQ.html#pragma-cache_size
         # http://web.utk.edu/~jplyon/sqlite/SQLite_optimization_FAQ.html
         if VERBOSE_SQL:
