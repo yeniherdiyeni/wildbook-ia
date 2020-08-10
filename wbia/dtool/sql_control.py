@@ -827,6 +827,9 @@ class SQLDatabaseController(object):
         """
         try:
             orig_table_kw = self.get_table_autogen_dict(METADATA_TABLE_NAME)
+        except psycopg2.errors.UndefinedTable:
+            orig_table_kw = None
+            self.connection.rollback()
         except (lite.OperationalError, NameError):
             orig_table_kw = None
 
