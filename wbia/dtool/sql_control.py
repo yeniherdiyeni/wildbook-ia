@@ -3496,3 +3496,10 @@ class SQLTable(ut.NiceRepr):
 
     def __nice__(table):
         return table.name + ', n=' + str(table.number_of_rows())
+
+
+if __name__ == '__main__':
+    from wbia.control.DB_SCHEMA_CURRENT import update_current
+
+    db = SQLDatabaseController.from_uri(os.getenv('DB_URL'))
+    update_current(db)
