@@ -1091,9 +1091,8 @@ class SQLDatabaseController(object):
         }
         operation_fmt = """
         INSERT INTO {tblname}(
-        rowid,
         {params}
-        ) VALUES (NULL, {erotemes})
+        ) VALUES ({erotemes})
         """
         rowid_list = self._executemany_operation_fmt(
             operation_fmt, fmtdict, params_iter=params_iter, **kwargs
@@ -1916,6 +1915,11 @@ class SQLDatabaseController(object):
             raise ValueError(f'name cannot be an empty string paired with {definition}')
         if not definition:
             raise ValueError(f'definition cannot be an empty string paired with {name}')
+        if (
+            self.uri.startswith('postgres')
+            and definition.lower() == 'integer primary key'
+        ):
+            definition = 'SERIAL PRIMARY KEY'
         return f'{name} {definition}'
 
     def _make_add_table_sqlstr(
