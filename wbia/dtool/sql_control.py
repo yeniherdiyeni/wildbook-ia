@@ -241,7 +241,7 @@ class SQLExecutionContext(object):
         Careful. Overwrites the results once you call it.
         Basically: Dont call this twice.
         """
-        if context.is_insert:
+        if context.is_insert and not context.is_postgres:
             # The sqlite3_last_insert_rowid(D) interface returns the
             # <b> rowid of the most recent successful INSERT </b>
             # into a rowid table in D
