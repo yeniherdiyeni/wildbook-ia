@@ -243,7 +243,12 @@ class SQLExecutionContext(object):
             context.cur.execute('SELECT last_insert_rowid()', ())
         # Wraping fetchone in a generator for some pretty tight calls.
         while True:
-            result = context.cur.fetchone()
+            try:
+                result = context.cur.fetchone()
+            except psycopg2.ProgrammingError as e:
+                if str(e) != 'no results to fetch':
+                    raise
+                result = None
             if not result:
                 return
             if context.keepwrap:
