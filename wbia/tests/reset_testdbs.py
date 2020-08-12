@@ -4,7 +4,7 @@
 downloads standard test datasets. can delete them as well
 """
 # TODO: ADD COPYRIGHT TAG
-from itertools import cycle
+# from itertools import cycle
 from os.path import join
 
 import six
@@ -43,14 +43,14 @@ def make_testdb0():
     def get_test_gpaths(ndata=None, names=None, **kwargs):
         # Read ndata from args or command line
         """ DEPRICATE """
-        ndata_arg = ut.get_argval(
-            '--ndata',
-            type_=int,
-            default=None,
-            help_='use --ndata to specify bigger data',
-        )
-        if ndata_arg is not None:
-            ndata = ndata_arg
+        # ndata_arg = ut.get_argval(
+        #     '--ndata',
+        #     type_=int,
+        #     default=None,
+        #     help_='use --ndata to specify bigger data',
+        # )
+        # if ndata_arg is not None:
+        #     ndata = ndata_arg
         imgdir = get_testdata_dir(**kwargs)
         gpath_list = sorted(list(ut.list_images(imgdir, full=True, recursive=True)))
         # Get only the gpaths of certain names
@@ -58,25 +58,33 @@ def make_testdb0():
             gpath_list = [
                 gpath for gpath in gpath_list if ut.basename_noext(gpath) in names
             ]
-        # Get a some number of test images
-        if ndata is not None:
-            gpath_cycle = cycle(gpath_list)
-            if six.PY2:
-                gpath_list = [gpath_cycle.next() for _ in range(ndata)]
-            else:
-                gpath_list = [next(gpath_cycle) for _ in range(ndata)]
+        # # Get a some number of test images
+        # if ndata is not None:
+        #     gpath_cycle = cycle(gpath_list)
+        #     if six.PY2:
+        #         gpath_list = [gpath_cycle.next() for _ in range(ndata)]
+        #     else:
+        #         gpath_list = [next(gpath_cycle) for _ in range(ndata)]
         return gpath_list
 
     workdir = wbia.sysres.get_workdir()
     TESTDB0 = join(workdir, 'testdb0')
+
+    # Obtain a controller instance so that we can initialize the testing data
     main_locals = wbia.main(dbdir=TESTDB0, gui=False, allow_newdir=True)
     ibs = main_locals['ibs']
+    # ??? Is it possible to not get a controller back? That seems a bit silly...
     assert ibs is not None, str(main_locals)
+
+    # Add the test images to the testdb0 database
     gpath_list = list(map(ut.unixpath, get_test_gpaths()))
-    # print('[RESET] gpath_list=%r' % gpath_list)
     gid_list = ibs.add_images(gpath_list)  # NOQA
+
+    # Obtain a list of valid GIDs and AIDs
     valid_gids = ibs.get_valid_gids()
     valid_aids = ibs.get_valid_aids()
+
+    # Verify there aren't any AIDs (annotations) at this time.
     try:
         assert (
             len(valid_aids) == 0
@@ -84,10 +92,13 @@ def make_testdb0():
     except Exception as ex:
         ut.printex(ex, key_list=['valid_aids'])
         raise
+
+    # Create annotations for the first valid GID
     gid_list = valid_gids[0:1]
     bbox_list = [(0, 0, 100, 100)]
     aid = ibs.add_annots(gid_list, bbox_list=bbox_list)[0]
-    # print('[RESET] NEW RID=%r' % aid)
+
+    # Make sure AIDs (annotations) were created.
     aids = ibs.get_image_aids(gid_list)[0]
     try:
         assert aid in aids, 'bad annotation adder: aid = %r, aids = %r' % (aid, aids,)
@@ -100,11 +111,12 @@ def ensure_smaller_testingdbs():
     """
     Makes the smaller test databases
     """
-    get_testdata_dir(True)
-    if not ut.checkpath(join(wbia.sysres.get_workdir(), 'testdb0'), verbose=True):
+    get_testdata_dir(ensure=True)
+    workdir = wbia.sysres.get_workdir()
+    if not ut.checkpath(join(workdir, 'testdb0'), verbose=True):
         print('\n\nMAKE TESTDB0\n\n')
         make_testdb0()
-    if not ut.checkpath(join(wbia.sysres.get_workdir(), 'testdb1'), verbose=True):
+    if not ut.checkpath(join(workdir, 'testdb1'), verbose=True):
         print('\n\nMAKE TESTDB1\n\n')
         ingest_database.ingest_standard_database('testdb1')
 
