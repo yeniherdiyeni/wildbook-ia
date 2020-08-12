@@ -978,7 +978,6 @@ def ingest_standard_database(dbname, force_delete=False):
     print('[ingest] Ingest Standard Database: dbname=%r' % (dbname,))
     ingestable = get_standard_ingestable(dbname)
     dbdir = wbia.sysres.db_to_dbdir(ingestable.dbname, allow_newdir=True)
-    ut.ensuredir(dbdir, verbose=True)
     if force_delete:
         ibsfuncs.delete_wbia_database(dbdir)
     ibs = IBEISControl.request_IBEISController(dbdir)
