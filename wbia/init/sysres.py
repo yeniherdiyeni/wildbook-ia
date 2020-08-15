@@ -148,28 +148,6 @@ def get_rawdir():
     return rawdir
 
 
-def guiselect_workdir():
-    """ Prompts the user to specify a work directory """
-    from wbia import guitool
-
-    guitool.ensure_qtapp()
-    # Gui selection
-    work_dir = guitool.select_directory('Select a work directory')
-
-    # Make sure selection is ok
-    if not exists(work_dir):
-        try_again = guitool.user_option(
-            paremt=None,
-            msg='Directory %r does not exist.' % work_dir,
-            title='get work dir failed',
-            options=['Try Again'],
-            use_cache=False,
-        )
-        if try_again == 'Try Again':
-            return guiselect_workdir()
-    return work_dir
-
-
 def db_to_dbdir(db, allow_newdir=False, extra_workdirs=[]):
     """
     Implicitly gets dbdir. Searches for db inside of workdir
