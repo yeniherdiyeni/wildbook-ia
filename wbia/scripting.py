@@ -3,7 +3,7 @@
 Bootstrapping functionality for commandline invocation
 """
 from .threadlocal import manager
-from .control.IBEISControl import IBEISController as DBController
+from .dtool.sql_control import SQLDatabaseController as DBController
 
 
 __all__ = ('prepare',)
@@ -35,7 +35,7 @@ def prepare(settings=None, controller=None):
 
     # Build the controller
     if not controller:
-        db_controller = DBController.from_uri(settings['db.runtime.uri'])
+        db_controller = DBController.from_uri(settings['db.runtime.url'])
 
     def closer():  # pragma: no cover
         db_controller.close()
