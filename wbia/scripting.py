@@ -3,7 +3,7 @@
 Bootstrapping functionality for commandline invocation
 """
 from .threadlocal import manager
-from .control.IBEISControl import IBEISController as Controller
+from .control.IBEISControl import IBEISController as DBController
 
 
 __all__ = ('prepare',)
@@ -35,13 +35,13 @@ def prepare(settings=None, controller=None):
 
     # Build the controller
     if not controller:
-        controller = Controller.from_uri(settings['db.runtime.uri'])
+        db_controller = DBController.from_uri(settings['db.runtime.uri'])
 
     def closer():  # pragma: no cover
-        controller.close()
+        db_controller.close()
 
     # Push the controller onto the threadlocal stack
-    locals_ = {'controller': controller, 'settings': settings}
+    locals_ = {'db': db_controller, 'settings': settings}
     manager.push(locals_)
 
     # Prepare the locals for return
