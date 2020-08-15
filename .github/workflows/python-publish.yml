@@ -32,6 +32,7 @@ jobs:
           # Using manylinux2014 because running the test command requires
           # pyqt5 which only has wheels for manylinux2014
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64
+          CIBW_TEST_REQUIRES: git+https://github.com/Lasagne/Lasagne.git#egg=lasagne
           CIBW_TEST_COMMAND: python -c "import wbia; from wbia.__main__ import smoke_test; smoke_test()"
         run: |
           python -m pip install cibuildwheel==1.4.2

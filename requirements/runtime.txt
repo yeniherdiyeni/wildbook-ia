@@ -12,6 +12,8 @@ flask-cors
 
 futures_actors
 ipython>=5.0.0
+# requirement of wbia-cnn, pypi version is too old so need the github version
+git+https://github.com/Lasagne/Lasagne.git#egg=lasagne
 lightnet
 lockfile>=0.10.2
 matplotlib>=3.3.0
@@ -42,6 +44,7 @@ torchvision
 tornado>=4.2.1
 tqdm
 ubelt >= 0.8.7
+wbia-cnn >= 3.0.0
 wbia-pydarknet >= 3.0.1
 wbia-pyflann >= 3.1.0
 wbia-pyhesaff >= 3.0.2
