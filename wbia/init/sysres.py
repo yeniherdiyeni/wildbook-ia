@@ -170,41 +170,6 @@ def guiselect_workdir():
     return work_dir
 
 
-def get_dbalias_dict():
-    # HACK: DEPRICATE
-    dbalias_dict = {}
-    if ut.is_developer():
-        # For jon's convinience
-        dbalias_dict.update(
-            {
-                'NAUTS': 'NAUT_Dan',
-                'WD': 'WD_Siva',
-                'LF': 'LF_all',
-                'GZ': 'GZ_ALL',
-                'MOTHERS': 'PZ_MOTHERS',
-                'FROGS': 'Frogs',
-                'TOADS': 'WY_Toads',
-                'SEALS_SPOTTED': 'Seals',
-                'OXFORD': 'Oxford_Buildings',
-                'PARIS': 'Paris_Buildings',
-                'JAG_KELLY': 'JAG_Kelly',
-                'JAG_KIERYN': 'JAG_Kieryn',
-                'WILDEBEAST': 'Wildebeast',
-                'WDOGS': 'WD_Siva',
-                'PZ': 'PZ_FlankHack',
-                'PZ2': 'PZ-Sweatwater',
-                'PZ_MARIANNE': 'PZ_Marianne',
-                'PZ_DANEXT_TEST': 'PZ_DanExt_Test',
-                'PZ_DANEXT_ALL': 'PZ_DanExt_All',
-                'LF_ALL': 'LF_all',
-                'WS_HARD': 'WS_hard',
-                'SONOGRAMS': 'sonograms',
-            }
-        )
-        dbalias_dict['JAG'] = dbalias_dict['JAG_KELLY']
-    return dbalias_dict
-
-
 def db_to_dbdir(db, allow_newdir=False, extra_workdirs=[]):
     """
     Implicitly gets dbdir. Searches for db inside of workdir
