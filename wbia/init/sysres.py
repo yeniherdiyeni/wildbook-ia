@@ -159,7 +159,6 @@ def db_to_dbdir(db, allow_newdir=False, extra_workdirs=[]):
         raise ValueError('db is None')
 
     work_dir = get_workdir()
-    dbalias_dict = get_dbalias_dict()
 
     workdir_list = []
     for extra_dir in extra_workdirs:
@@ -170,9 +169,6 @@ def db_to_dbdir(db, allow_newdir=False, extra_workdirs=[]):
     # Check all of your work directories for the database
     for _dir in workdir_list:
         dbdir = realpath(join(_dir, db))
-        # Use db aliases
-        if not exists(dbdir) and db.upper() in dbalias_dict:
-            dbdir = join(_dir, dbalias_dict[db.upper()])
         if exists(dbdir):
             break
 
