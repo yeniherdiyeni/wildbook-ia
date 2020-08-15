@@ -6,7 +6,7 @@ import threading
 
 
 __all__ = (
-    'get_current_controller',
+    'get_current_db',
     'get_current_settings',
     'manager',
 )
@@ -33,9 +33,9 @@ class ThreadLocalManager(threading.local):
 manager = ThreadLocalManager()
 
 
-def get_current_controller():
+def get_current_db():
     """Return the active controller"""
-    return manager.get()['controller']
+    return manager.get()['db']
 
 
 def get_current_settings():
