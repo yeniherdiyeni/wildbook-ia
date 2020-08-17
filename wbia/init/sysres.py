@@ -6,10 +6,14 @@ but without the need for an actual IBEIS Controller
 """
 import os
 from os.path import exists, join, realpath
+
 import utool as ut
 import ubelt as ub
+from deprecated import deprecated
 from six.moves import input, zip, map
+
 from wbia import constants as const
+from wbia.threadlocal import get_current_settings
 
 
 (print, rrr, profile) = ut.inject2(__name__)
@@ -22,58 +26,28 @@ __APPNAME__ = 'wbia'
 ALLOW_GUI = ut.WIN32 or os.environ.get('DISPLAY', None) is not None
 
 
-def get_wbia_resource_dir():
-    return ub.ensure_app_cache_dir('wbia')
-
-
-def _wbia_cache_dump():
-    ut.global_cache_dump(appname=__APPNAME__)
-
-
-def _wbia_cache_write(key, val):
-    """ Writes to global IBEIS cache
-    TODO: Use text based config file
-    """
-    print('[sysres] set %s=%r' % (key, val))
-    ut.global_cache_write(key, val, appname=__APPNAME__)
-
-
-def _wbia_cache_read(key, **kwargs):
-    """ Reads from global IBEIS cache """
-    return ut.global_cache_read(key, appname=__APPNAME__, **kwargs)
-
-
-# Specific cache getters / setters
-
-
+@deprecated("use DB_URL environment variable instead; see also wbia.config")
 def set_default_dbdir(dbdir):
-    if ut.DEBUG2:
-        print('[sysres] SETTING DEFAULT DBDIR: %r' % dbdir)
-    _wbia_cache_write(DEFAULTDB_CAHCEID, dbdir)
+    # no-op, setting is stored as an environment variable
+    pass
 
 
+@deprecated("use wbia.threadlocal.get_current_settings()['db.runtime.url'] instead")
 def get_default_dbdir():
-    dbdir = _wbia_cache_read(DEFAULTDB_CAHCEID, default=None)
-    if ut.DEBUG2:
-        print('[sysres] READING DEFAULT DBDIR: %r' % dbdir)
-    return dbdir
+    from wbia.threadlocal import get_current_settings
+    return get_current_settings()['db.runtime.url']
 
 
+@deprecated("use wbia.threadlocal.get_current_settings()['data.location'] instead")
 def get_workdir(allow_gui=True):
     """
-    Returns the work directory set for this computer.  If allow_gui is true,
-    a dialog will ask a user to specify the workdir if it does not exist.
-
-    python -c "import wbia; print(wbia.get_workdir())"
+    Returns the work directory set for this computer.
 
     Args:
         allow_gui (bool): (default = True)
 
     Returns:
         str: work_dir
-
-    CommandLine:
-        python -m wbia.init.sysres get_workdir
 
     Example:
         >>> # ENABLE_DOCTEST
@@ -83,48 +57,18 @@ def get_workdir(allow_gui=True):
         >>> result = ('work_dir = %s' % (str(work_dir),))
         >>> print(result)
     """
-    work_dir = _wbia_cache_read(WORKDIR_CACHEID, default='.')
-    print('[wbia.sysres.get_workdir] work_dir = {!r}'.format(work_dir))
-    if work_dir != '.' and exists(work_dir):
-        return work_dir
-    if allow_gui:
-        work_dir = set_workdir()
-        return get_workdir(allow_gui=False)
-    return None
+    return get_current_settings()['data.location']
 
 
+@deprecated("use DATA_LOCATION environment variable instead; see also wbia.config")
 def set_workdir(work_dir=None, allow_gui=ALLOW_GUI):
     """ Sets the workdirectory for this computer
 
     Args:
         work_dir (None): (default = None)
         allow_gui (bool): (default = True)
-
-    CommandLine:
-        python -c "import wbia; wbia.sysres.set_workdir('/raid/work2')"
-        python -c "import wbia; wbia.sysres.set_workdir('/raid/work')"
-
-        python -m wbia.init.sysres set_workdir
-
-    Example:
-        >>> # SCRIPT
-        >>> from wbia.init.sysres import *  # NOQA
-        >>> print('current_work_dir = %s' % (str(get_workdir(False)),))
-        >>> work_dir = ut.get_argval('--workdir', type_=str, default=None)
-        >>> allow_gui = True
-        >>> result = set_workdir(work_dir, allow_gui)
     """
-    if work_dir is None:
-        if allow_gui:
-            try:
-                work_dir = guiselect_workdir()
-            except ImportError:
-                allow_gui = False
-        if not allow_gui:
-            work_dir = ut.truepath(input('specify a workdir: '))
-    if work_dir is None or not exists(work_dir):
-        raise AssertionError('invalid workdir=%r' % work_dir)
-    _wbia_cache_write(WORKDIR_CACHEID, work_dir)
+    pass
 
 
 def set_logdir(log_dir):

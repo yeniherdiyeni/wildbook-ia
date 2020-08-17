@@ -682,10 +682,8 @@ class SQLDatabaseController(object):
 
         self.thread_connections = {}
 
-        # Create connection
-        connection, uri = self._create_connection()
-        self._connection = connection
-        self.uri = uri
+        self.uri = f"file://{self.fpath}"
+        self._connection = None
 
         # Get a cursor which will preform sql commands / queries / executions
         self.cur = self.connection.cursor()
@@ -745,7 +743,7 @@ class SQLDatabaseController(object):
     def connect(self):
         """Create a connection for the instance or use the existing connection"""
         self._connection = lite.connect(
-            self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
+            self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout, uri=True,
         )
         return self._connection
 
@@ -761,9 +759,12 @@ class SQLDatabaseController(object):
 
     def _create_connection(self):
         if self.fname == ':memory:':
-            uri = None
+            # uri = None
             connection = lite.connect(
-                ':memory:', detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
+                ':memory:',
+                detect_types=lite.PARSE_DECLTYPES,
+                timeout=self.timeout,
+                uri=True,
             )
         else:
             assert exists(self.dir_), '[sql] self.dir_=%r does not exist!' % self.dir_
@@ -777,18 +778,18 @@ class SQLDatabaseController(object):
 
             # References:
             # http://stackoverflow.com/questions/10205744/opening-sqlite3-database-from-python-in-read-only-mode
-            uri = 'file:' + self.fpath
-            if self.readonly:
-                uri += '?mode=ro'
+            # uri = 'file:' + self.fpath
+            # if self.readonly:
+            #     uri += '?mode=ro'
             connection = lite.connect(
-                uri, uri=True, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
+                self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout, uri=True,
             )
 
         # Keep track of what thead this was started in
         threadid = threading.current_thread()
         self.thread_connections[threadid] = connection
 
-        return connection, uri
+        return connection, self.uri
 
     def get_fpath(self):
         return self.fpath
@@ -948,7 +949,7 @@ class SQLDatabaseController(object):
         self.connection.close()
         del self.connection
         self.connection = lite.connect(
-            self.fpath, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout
+            self.uri, detect_types=lite.PARSE_DECLTYPES, timeout=self.timeout, uri=True,
         )
         self.cur = self.connection.cursor()
 

@@ -406,7 +406,7 @@ def get_name_aids(ibs, nid_list, enable_unknown_fix=True, is_staged=False):
 
     import sqlite3
 
-    con = sqlite3.connect(ibs.db.fpath)
+    con = sqlite3.connect(ibs.db.uri)
 
     opstr = '''
     SELECT annot_rowid, name_rowid

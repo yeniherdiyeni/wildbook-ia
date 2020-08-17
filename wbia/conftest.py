@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # See also conftest.py documentation at https://docs.pytest.org/en/stable/fixture.html#conftest-py-sharing-fixture-functions
 """This module is implicitly used by ``pytest`` to load testing configuration and fixtures."""
+import os
 from pathlib import Path
 
 import pytest
@@ -10,14 +11,13 @@ from wbia.init.sysres import (
     ensure_pz_mtest,
     ensure_testdb2,
     ensure_wilddogs,
-    get_workdir,
-    set_default_dbdir,
 )
 from wbia.tests.reset_testdbs import (
     TEST_DBNAMES_MAP,
     delete_dbdir,
     ensure_smaller_testingdbs,
 )
+from wbia.scripting import prepare
 
 
 @pytest.fixture
@@ -32,12 +32,23 @@ def enable_wildbook_signal():
 
 @pytest.fixture(scope='session', autouse=True)
 @pytest.mark.usefixtures('enable_wildbook_signal')
-def set_up_db(request):
+def set_up_db(request, tmp_path_factory):
     """
     Sets up the testing databases.
     This fixture is set to run automatically any any test run of wbia.
 
     """
+    # Prepare the testing environment
+    testing_loc = tmp_path_factory.mktemp('var')
+    default_db_url = f"file://{testing_loc}/db"
+    test_settings = {
+        'data.location': testing_loc,
+        'db.runtime.url': os.getenv('TESTING_DB_URL', default_db_url),
+    }
+    # Lead off with preparing the controller, which requires database info
+    # because the application is database focused.
+    prepare(test_settings)
+
     # If selected, disable running the main logic of this fixture
     if request.config.getoption("--disable-refresh-db", False):
         # Assume the user knows what they are requesting
@@ -54,12 +65,6 @@ def set_up_db(request):
     ensure_nauts()
     ensure_wilddogs()
     ensure_testdb2()
-
-    # Set testdb1 as the main database
-    workdir = Path(get_workdir())
-    default_db_dir = workdir / 'testdb1'
-    # FIXME (16-Jul-12020) Set this only for the test session
-    set_default_dbdir(default_db_dir.resolve())
 
 
 @pytest.fixture(scope='session')
