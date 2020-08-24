@@ -4,6 +4,7 @@ This module defines the entry point into the IBEIS system
 wbia.opendb and wbia.main are the main entry points
 """
 import logging
+import os
 import sys
 import multiprocessing
 from contextlib import contextmanager
@@ -205,8 +206,6 @@ def set_newfile_permissions():
         >>> print('old masked all bits = %o' % (stat_result1.st_mode))
         >>> print('new masked all bits = %o' % (stat_result2.st_mode))
     """
-    import os
-
     # import stat
     # Set umask so all files written will be group read and writable
     # To get the permissions we want subtract what you want from 0o0666 because
@@ -265,7 +264,6 @@ def main(
         logger.info('[main] wbia.entry_points.main()')
     DIAGNOSTICS = NOT_QUIET
     if DIAGNOSTICS:
-        import os
         import utool as ut
         import wbia
 
@@ -275,6 +273,11 @@ def main(
         logger.info('[main]  * computername = %r' % (ut.get_computer_name()))
         logger.info('[main]  * cwd = %r' % (os.getcwd(),))
         logger.info('[main]  * sys.argv = %r' % (sys.argv,))
+
+    # FIXME (24-Aug-12020) This really needs to be defined in a central location,
+    #       but that doesn't exist. Until then this gets hacked into place.
+    base_db_uri = os.getenv('WBIA_BASE_DB_URI')  # noqa
+
     # Parse directory to be loaded from command line args
     # and explicit kwargs
     dbdir = sysres.get_args_dbdir(
