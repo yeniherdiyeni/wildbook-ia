@@ -12,6 +12,7 @@ from contextlib import contextmanager
 import utool as ut
 
 from wbia import params
+from wbia.bbb import validate_db_uri
 
 
 QUIET = '--quiet' in sys.argv
@@ -276,7 +277,9 @@ def main(
 
     # FIXME (24-Aug-12020) This really needs to be defined in a central location,
     #       but that doesn't exist. Until then this gets hacked into place.
-    base_db_uri = os.getenv('WBIA_BASE_DB_URI')  # noqa
+    base_db_uri = os.getenv('WBIA_BASE_DB_URI')
+    # For lack of a better place to do validation of arguments and settings. =/
+    validate_db_uri(base_db_uri)  # raises exception when invalid
 
     # Parse directory to be loaded from command line args
     # and explicit kwargs
