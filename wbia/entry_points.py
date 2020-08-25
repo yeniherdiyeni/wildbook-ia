@@ -15,7 +15,6 @@ from wbia import params
 
 QUIET = '--quiet' in sys.argv
 NOT_QUIET = not QUIET
-USE_GUI = '--gui' in sys.argv or '--nogui' not in sys.argv
 
 
 (print, _, __) = ut.inject2(__name__)
@@ -48,20 +47,6 @@ def _init_matplotlib():
     from wbia.plottool import __MPL_INIT__
 
     __MPL_INIT__.init_matplotlib()
-
-
-def _init_gui(activate=True):
-    from wbia import guitool
-
-    if NOT_QUIET:
-        logger.info('[main] _init_gui()')
-    guitool.ensure_qtapp()
-    from wbia.gui import guiback
-
-    back = guiback.MainWindowBackend()
-    if activate:
-        guitool.activate_qwindow(back.mainwin)
-    return back
 
 
 def _init_wbia(dbdir=None, verbose=None, use_cache=True, web=None, **kwargs):
@@ -158,28 +143,6 @@ def _init_numpy():
     # np.set_printoptions(**numpy_print)
 
 
-# -----------------------
-# private loop functions
-
-
-def _guitool_loop(main_locals, ipy=False):
-    from wbia import guitool, params
-
-    logger.info('[main] guitool loop')
-    back = main_locals.get('back', None)
-    if back is not None:
-        loop_freq = params.args.loop_freq
-        ipy = ipy or params.args.cmd
-        guitool.qtapp_loop(
-            qwin=back.mainwin, ipy=ipy, frequency=loop_freq, init_signals=False
-        )
-        if ipy:  # If we're in IPython, the qtapp loop won't block, so we need to refresh
-            back.refresh_state()
-    else:
-        if NOT_QUIET:
-            logger.info('WARNING: back was not expected to be None')
-
-
 def main(
     gui=True,
     dbdir=None,
@@ -219,7 +182,6 @@ def main(
         logger.info(msg)
     # Init the only two main system api handles
     ibs = None
-    back = None
     if NOT_QUIET:
         logger.info('[main] wbia.entry_points.main()')
     DIAGNOSTICS = NOT_QUIET
@@ -256,14 +218,11 @@ def main(
     try:
         # Build IBEIS Control object
         ibs = _init_wbia(dbdir)
-        if gui and USE_GUI:
-            back = _init_gui(activate=kwargs.get('activate', True))
-            back.connect_wbia_control(ibs)
     except Exception as ex:
         logger.info('[main()] IBEIS LOAD encountered exception: %s %s' % (type(ex), ex))
         raise
-    main_commands.postload_commands(ibs, back)  # POSTLOAD CMDS
-    main_locals = {'ibs': ibs, 'back': back}
+    main_commands.postload_commands(ibs)  # POSTLOAD CMDS
+    main_locals = {'ibs': ibs}
     return main_locals
 
 
@@ -584,41 +543,3 @@ def _preload(mpl=True, par=True, logging=True):
     # register type aliases for debugging
     # main_helpers.register_utool_aliases()
     # return params.args
-
-
-def main_loop(main_locals, rungui=True, ipy=False, persist=True):
-    """
-    Runs the qt loop if the GUI was initialized and returns an executable string
-    for embedding an IPython terminal if requested.
-
-    If rungui is False the gui will not loop even if back has been created
-
-    the main locals dict must be callsed main_locals in the scope you call this
-    function in.
-
-    Args:
-        main_locals (dict_):
-        rungui      (bool):
-        ipy         (bool):
-        persist     (bool):
-
-    Returns:
-        str: execstr
-    """
-    logger.info('[main] wbia.entry_points.main_loop()')
-    params.parse_args()
-    import utool as ut
-
-    # logger.info('current process = %r' % (multiprocessing.current_process().name,))
-    # == 'MainProcess':
-    if rungui and not params.args.nogui:
-        try:
-            _guitool_loop(main_locals, ipy=ipy)
-        except Exception as ex:
-            ut.printex(ex, 'error in main_loop')
-            raise
-    # Put locals in the exec namespace
-    ipycmd_execstr = ut.ipython_execstr()
-    locals_execstr = ut.execstr_dict(main_locals, 'main_locals')
-    execstr = locals_execstr + '\n' + ipycmd_execstr
-    return execstr

@@ -65,7 +65,6 @@ try:
         main,
         _preload,
         _init_numpy,
-        main_loop,
         opendb,
         opendb_in_background,
         opendb_bg_web,

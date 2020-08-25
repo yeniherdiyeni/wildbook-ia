@@ -10,7 +10,7 @@ import ubelt as ub
 import sys
 
 from wbia.dev import devmain
-from wbia.entry_points import main, main_loop
+from wbia.entry_points import main
 from wbia.scripts.rsync_wbiadb import rsync_ibsdb_main
 
 
@@ -40,10 +40,6 @@ def run_wbia():
     """
     import wbia  # NOQA
 
-    # ut.set_process_title('wbia_main')
-    # main_locals = wbia.main()
-    # wbia.main_loop(main_locals)
-    # ut.set_process_title('wbia_main')
     cmdline_varags = ut.get_cmdline_varargs()
     if len(cmdline_varags) > 0 and cmdline_varags[0] == 'rsync':
         rsync_ibsdb_main()
@@ -64,20 +60,9 @@ def run_wbia():
         logger.info('... exiting')
         sys.exit(0)
 
-    main_locals = main()
-    execstr = main_loop(main_locals)
-    # <DEBUG CODE>
-    if 'back' in main_locals and CMD:
-        back = main_locals['back']
-        front = getattr(back, 'front', None)  # NOQA
-        # front = back.front
-        # ui = front.ui
-    ibs = main_locals['ibs']  # NOQA
-    logger.info('-- EXECSTR --')
-    logger.info(ub.codeblock(execstr))
-    logger.info('-- /EXECSTR --')
-    exec(execstr)
-    # </DEBUG CODE>
+    main_locals = main()  # noqa
+    # FIXME (24-Aug-12020) Repurpose this function for use in starting the main process.
+    return
 
 
 if __name__ == '__main__':
