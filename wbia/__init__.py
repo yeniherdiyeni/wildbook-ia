@@ -53,8 +53,6 @@ try:
     from wbia import other
     from wbia.init import sysres
 
-    # entry_points._preload()
-
     from wbia import control
     from wbia import dbio
 
@@ -63,8 +61,6 @@ try:
     from wbia.init import sysres
     from wbia.entry_points import (
         main,
-        _preload,
-        _init_numpy,
         opendb,
         opendb_in_background,
         opendb_bg_web,

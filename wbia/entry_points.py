@@ -5,12 +5,12 @@ wbia.opendb and wbia.main are the main entry points
 """
 import logging
 import sys
-import multiprocessing
 from contextlib import contextmanager
 
 import utool as ut
 
 from wbia import params
+from wbia.scripting import preload
 
 
 QUIET = '--quiet' in sys.argv
@@ -19,34 +19,6 @@ NOT_QUIET = not QUIET
 
 (print, _, __) = ut.inject2(__name__)
 logger = logging.getLogger('wbia')
-
-
-def _on_ctrl_c(signal, frame):
-    proc_name = multiprocessing.current_process().name
-    logger.info('[wbia.entry_points] Caught ctrl+c in %s' % (proc_name,))
-    sys.exit(0)
-
-
-# -----------------------
-# private init functions
-
-
-def _init_signals():
-    import signal
-
-    signal.signal(signal.SIGINT, _on_ctrl_c)
-
-
-def _reset_signals():
-    import signal
-
-    signal.signal(signal.SIGINT, signal.SIG_DFL)  # reset ctrl+c behavior
-
-
-def _init_matplotlib():
-    from wbia.plottool import __MPL_INIT__
-
-    __MPL_INIT__.init_matplotlib()
 
 
 def _init_wbia(dbdir=None, verbose=None, use_cache=True, web=None, **kwargs):
@@ -90,59 +62,6 @@ def _init_wbia(dbdir=None, verbose=None, use_cache=True, web=None, **kwargs):
     return ibs
 
 
-def _init_parallel():
-    import utool as ut
-
-    if ut.VERBOSE:
-        logger.info('_init_parallel')
-    from utool import util_parallel
-
-    params.parse_args()
-
-    # Import any modules which parallel process will use here
-    # so they are accessable when the program forks
-    # from utool import util_sysreq
-    # util_sysreq.ensure_in_pythonpath('hesaff')
-    # util_sysreq.ensure_in_pythonpath('pyrf')
-    # util_sysreq.ensure_in_pythonpath('code')
-    # import pyhesaff  # NOQA
-    # import pyrf  # NOQA
-    from wbia import core_annots  # NOQA
-
-    # .algo.preproc import preproc_chip  # NOQA
-    util_parallel.set_num_procs(params.args.num_procs)
-    # if PREINIT_MULTIPROCESSING_POOLS:
-    #    util_parallel.init_pool(params.args.num_procs)
-
-
-def _init_numpy():
-    import utool as ut
-    import numpy as np
-
-    if ut.VERBOSE:
-        logger.info('_init_numpy')
-    error_options = ['ignore', 'warn', 'raise', 'call', 'print', 'log']
-    on_err = error_options[0]
-    # np.seterr(divide='ignore', invalid='ignore')
-    numpy_err = {
-        'divide': on_err,
-        'over': on_err,
-        'under': on_err,
-        'invalid': on_err,
-    }
-    # numpy_print = {
-    #    'precision': 8,
-    #    'threshold': 500,
-    #    'edgeitems': 3,
-    #    'linewidth': 200,  # default 75
-    #    'suppress': False,
-    #    'nanstr': 'nan',
-    #    'formatter': None,
-    # }
-    np.seterr(**numpy_err)
-    # np.set_printoptions(**numpy_print)
-
-
 def main(
     gui=True,
     dbdir=None,
@@ -168,7 +87,7 @@ def main(
     Returns:
         dict: main_locals
     """
-    _preload()
+    preload()
     from wbia.init import main_commands
     from wbia.init import sysres
 
@@ -462,45 +381,9 @@ def opendb_test(gui=True, dbdir=None, defaultdb='cache', allow_newdir=False, db=
     """ alias for main() """  # + main.__doc__
     from wbia.init import sysres
 
-    _preload()
+    preload()
     dbdir = sysres.get_args_dbdir(
         defaultdb=defaultdb, allow_newdir=allow_newdir, db=db, dbdir=dbdir
     )
     ibs = _init_wbia(dbdir)
     return ibs
-
-
-def _preload(mpl=True, par=True, logging=True):
-    """ Sets up python environment """
-    import utool as ut
-
-    # from wbia.init import main_helpers
-    # params.parse_args()
-    # from wbia.init import sysres
-    if multiprocessing.current_process().name != 'MainProcess':
-        return
-    if ut.VERBOSE:
-        logger.info('[wbia] _preload')
-    params.parse_args()
-    # mpl backends
-    # if logging and not params.args.nologging:
-    #     if params.args.logdir is not None:
-    #         sysres.set_logdir(params.args.logdir)
-    #     else:
-    #         # Log in the configured wbia log dir (which is maintained by utool)
-    #         # fix this to be easier to figure out where the logs actually are
-    #         ut.start_logging(appname='wbia')
-    if mpl:
-        _init_matplotlib()
-    # numpy print settings
-    _init_numpy()
-    # parallel servent processes
-    if par:
-        _init_parallel()
-    # ctrl+c
-    _init_signals()
-    # inject colored exceptions
-    ut.util_inject.inject_colored_exceptions()
-    # register type aliases for debugging
-    # main_helpers.register_utool_aliases()
-    # return params.args
