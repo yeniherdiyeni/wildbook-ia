@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
+"""
+Bootstrapping functionality for commandline invocation
+"""
 import logging
 import multiprocessing
 import signal
 import sys
 
 import utool as ut
+from deprecated import deprecated
 
 from wbia import params
+
+
+__all__ = ('prepare',)
 
 
 logger = logging.getLogger('wbia')
@@ -71,6 +78,7 @@ def _configure_numpy():
     # np.set_printoptions(**numpy_print)
 
 
+@deprecated('use wbia.scripting.prepare')
 def preload():
     """ Sets up python environment """
     # ??? (24-Aug-12020) Unsure when this would actually occur
@@ -86,3 +94,54 @@ def preload():
 
     # inject colored exceptions
     ut.util_inject.inject_colored_exceptions()
+
+
+def prepare(settings=None, controller=None):
+    """
+    Initializes the Controller (heart of the application) for use
+    in a scripted setting. This returns a dictionary of locals
+    including a controller object, settings data and closer function.
+
+    The closer function should be used at the end of your script
+    for data safety. Tip, use this function as a context-manager
+    to automatically call the closer.
+
+    This function places the settings and controller on the thread-local stack.
+    You can access the data from anywhere in your program,
+    because the variables are essentially global.
+
+    Args:
+        settings (dict): (not yet implemented) function signature placeholder
+        controller (Controller): an instantiated controller object
+
+    Returns:
+        dict: locals to be used within a scripting setting
+    """
+    # TODO (24-Aug-12020) consume necessary bits of logic from 'preload'
+    preload()
+
+    # Discover settings and configuration
+    # if not settings:
+    #     settings = discover_settings()
+
+    # Build the controller
+    # TODO (18-Aug-12020) Initialize the controller even though None will be a valid option.
+    if controller is None:
+        raise NotImplementedError('At this time you must initialize the controller')
+
+    def closer():  # pragma: no cover
+        controller.close()
+
+    # Push the controller onto the threadlocal stack
+    locals_ = {'controller': controller, 'settings': settings}
+
+    # Prepare the locals for return
+    return AppContext(closer=closer, **locals_)
+
+
+class AppContext(dict):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        getattr(self, 'closer', lambda: None)()

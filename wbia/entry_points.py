@@ -4,13 +4,14 @@ This module defines the entry point into the IBEIS system
 wbia.opendb and wbia.main are the main entry points
 """
 import logging
+import os
 import sys
 from contextlib import contextmanager
 
 import utool as ut
 
 from wbia import params
-from wbia.scripting import preload
+from wbia.scripting import preload, prepare
 
 
 QUIET = '--quiet' in sys.argv
@@ -21,45 +22,11 @@ NOT_QUIET = not QUIET
 logger = logging.getLogger('wbia')
 
 
-def _init_wbia(dbdir=None, verbose=None, use_cache=True, web=None, **kwargs):
-    """
-    Private function that calls code to create an wbia controller
-    """
-    import utool as ut
-
-    params.parse_args()
+def _xxx_make_controller(**kwargs):
+    """Temporary factory for the IBEISController"""
     from wbia.control import IBEISControl
 
-    if verbose is None:
-        verbose = ut.VERBOSE
-    if verbose and NOT_QUIET:
-        logger.info('[main] _init_wbia()')
-    # Use command line dbdir unless user specifies it
-    if dbdir is None:
-        ibs = None
-        logger.info('[main!] WARNING: args.dbdir is None')
-    else:
-        kwargs = kwargs.copy()
-        request_dbversion = kwargs.pop('request_dbversion', None)
-        force_serial = kwargs.get('force_serial', None)
-        ibs = IBEISControl.request_IBEISController(
-            dbdir=dbdir,
-            use_cache=use_cache,
-            request_dbversion=request_dbversion,
-            force_serial=force_serial,
-        )
-        if web is None:
-            web = ut.get_argflag(
-                ('--webapp', '--webapi', '--web', '--browser'),
-                help_='automatically launch the web app / web api',
-            )
-            # web = params.args.webapp
-        if web:
-            from wbia.web import app
-
-            port = params.args.webport
-            app.start_from_wbia(ibs, port=port, **kwargs)
-    return ibs
+    return IBEISControl.request_IBEISController(**kwargs)
 
 
 def main(
@@ -88,26 +55,21 @@ def main(
         dict: main_locals
     """
     preload()
+
+    import wbia
     from wbia.init import main_commands
     from wbia.init import sysres
 
     # Init the only two main system api handles
     ibs = None
 
-    if NOT_QUIET:
-        logger.info('[main] wbia.entry_points.main()')
-    DIAGNOSTICS = NOT_QUIET
-    if DIAGNOSTICS:
-        import os
-        import utool as ut
-        import wbia
+    logger.info('[main] MAIN DIAGNOSTICS')
+    logger.info('[main]  * username = %r' % (ut.get_user_name()))
+    logger.info('[main]  * wbia.__version__ = %r' % (wbia.__version__,))
+    logger.info('[main]  * computername = %r' % (ut.get_computer_name()))
+    logger.info('[main]  * cwd = %r' % (os.getcwd(),))
+    logger.info('[main]  * sys.argv = %r' % (sys.argv,))
 
-        logger.info('[main] MAIN DIAGNOSTICS')
-        logger.info('[main]  * username = %r' % (ut.get_user_name()))
-        logger.info('[main]  * wbia.__version__ = %r' % (wbia.__version__,))
-        logger.info('[main]  * computername = %r' % (ut.get_computer_name()))
-        logger.info('[main]  * cwd = %r' % (os.getcwd(),))
-        logger.info('[main]  * sys.argv = %r' % (sys.argv,))
     # Parse directory to be loaded from command line args
     # and explicit kwargs
     dbdir = sysres.get_args_dbdir(
@@ -123,14 +85,14 @@ def main(
 
     # Execute preload commands
     main_commands.preload_commands(dbdir, **kwargs)  # PRELOAD CMDS
-    try:
-        # Build IBEIS Control object
-        ibs = _init_wbia(dbdir)
-    except Exception as ex:
-        logger.info('[main()] IBEIS LOAD encountered exception: %s %s' % (type(ex), ex))
-        raise
+
+    # Build Controller object
+    controller = _xxx_make_controller(dbdir=dbdir, use_cache=True)
+    app_context = prepare(controller=controller)
+
+    # Execute postload commands
     main_commands.postload_commands(ibs)  # POSTLOAD CMDS
-    main_locals = {'ibs': ibs}
+    main_locals = {'ibs': app_context['controller']}
     return main_locals
 
 
@@ -373,8 +335,24 @@ def opendb(
             allow_newdir
         ), 'must be making new directory if you are deleting everything!'
         ibsfuncs.delete_wbia_database(dbdir)
-    ibs = _init_wbia(dbdir, verbose=verbose, use_cache=use_cache, web=web, **kwargs)
-    return ibs
+
+    # Build Controller object
+    controller = _xxx_make_controller(dbdir=dbdir, use_cache=use_cache)
+    app_context = prepare(controller=controller)
+
+    # FIXME (24-Aug-12020) This simply feels like the wrong place to put this logic.
+    if web is None:
+        web = ut.get_argflag(
+            ('--webapp', '--webapi', '--web', '--browser'),
+            help_='automatically launch the web app / web api',
+        )
+    if web:
+        from wbia.web import app
+
+        port = params.args.webport
+        app.start_from_wbia(app_context['controller'], port=port, **kwargs)
+
+    return app_context['controller']
 
 
 def opendb_test(gui=True, dbdir=None, defaultdb='cache', allow_newdir=False, db=None):
@@ -385,5 +363,8 @@ def opendb_test(gui=True, dbdir=None, defaultdb='cache', allow_newdir=False, db=
     dbdir = sysres.get_args_dbdir(
         defaultdb=defaultdb, allow_newdir=allow_newdir, db=db, dbdir=dbdir
     )
-    ibs = _init_wbia(dbdir)
-    return ibs
+    # Build Controller object
+    controller = _xxx_make_controller(dbdir=dbdir, use_cache=True)
+    app_context = prepare(controller=controller)
+
+    return app_context['controller']
