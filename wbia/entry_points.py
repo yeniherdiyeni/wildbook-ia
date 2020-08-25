@@ -180,46 +180,6 @@ def _guitool_loop(main_locals, ipy=False):
             logger.info('WARNING: back was not expected to be None')
 
 
-def set_newfile_permissions():
-    r"""
-    sets this processes default permission bits when creating new files
-
-    CommandLine:
-        python -m wbia.entry_points --test-set_newfile_permissions
-
-    Example:
-        >>> # ENABLE_DOCTEST
-        >>> from wbia.entry_points import *  # NOQA
-        >>> import os
-        >>> import utool as ut
-        >>> # write before umask
-        >>> ut.delete('tempfile1.txt')
-        >>> ut.write_to('tempfile1.txt', 'foo')
-        >>> stat_result1 = os.stat('tempfile1.txt')
-        >>> # apply umask
-        >>> set_newfile_permissions()
-        >>> ut.delete('tempfile2.txt')
-        >>> ut.write_to('tempfile2.txt', 'foo')
-        >>> stat_result2 = os.stat('tempfile2.txt')
-        >>> # verify results
-        >>> print('old masked all bits = %o' % (stat_result1.st_mode))
-        >>> print('new masked all bits = %o' % (stat_result2.st_mode))
-    """
-    import os
-
-    # import stat
-    # Set umask so all files written will be group read and writable
-    # To get the permissions we want subtract what you want from 0o0666 because
-    # umask subtracts the mask you give it.
-    # mask = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH
-    # mask = 0o000  # most permissive umask
-    mask = 0o000  # most permissive umask
-    prev_mask = os.umask(mask)
-    return prev_mask
-    # logger.info('prev_mask = %o' % (prev_mask,))
-    # logger.info('new_mask  = %o' % (mask,))
-
-
 def main(
     gui=True,
     dbdir=None,
@@ -246,7 +206,6 @@ def main(
         dict: main_locals
     """
     _preload()
-    set_newfile_permissions()
     from wbia.init import main_commands
     from wbia.init import sysres
 
