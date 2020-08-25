@@ -658,14 +658,8 @@ def main_loop(main_locals, rungui=True, ipy=False, persist=True):
         except Exception as ex:
             ut.printex(ex, 'error in main_loop')
             raise
-    # if not persist or params.args.cmd:
-    #    main_close()
     # Put locals in the exec namespace
     ipycmd_execstr = ut.ipython_execstr()
     locals_execstr = ut.execstr_dict(main_locals, 'main_locals')
     execstr = locals_execstr + '\n' + ipycmd_execstr
     return execstr
-
-
-def main_close(main_locals=None):
-    _reset_signals()
