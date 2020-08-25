@@ -172,16 +172,9 @@ def main(
     from wbia.init import main_commands
     from wbia.init import sysres
 
-    # Display a visible intro message
-    msg = """
-    _____ ______  _______ _____ _______
-      |   |_____] |______   |   |______
-    __|__ |_____] |______ __|__ ______|
-    """
-    if NOT_QUIET:
-        logger.info(msg)
     # Init the only two main system api handles
     ibs = None
+
     if NOT_QUIET:
         logger.info('[main] wbia.entry_points.main()')
     DIAGNOSTICS = NOT_QUIET
