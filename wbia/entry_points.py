@@ -396,29 +396,6 @@ def opendb_bg_web(*args, managed=False, **kwargs):
     return web_ibs
 
 
-def opendb_fg_web(*args, **kwargs):
-    """
-    Ignore:
-        >>> from wbia.entry_points import *  # NOQA
-        >>> kwargs = {'db': 'testdb1'}
-        >>> args = tuple()
-
-        >>> import wbia
-        >>> ibs = wbia.opendb_fg_web()
-
-    """
-    # Gives you context inside the web app for testing
-    kwargs['start_web_loop'] = False
-    kwargs['web'] = True
-    kwargs['browser'] = False
-    ibs = opendb(*args, **kwargs)
-    from wbia.control import controller_inject
-
-    app = controller_inject.get_flask_app()
-    ibs.app = app
-    return ibs
-
-
 def opendb(
     db=None,
     dbdir=None,
