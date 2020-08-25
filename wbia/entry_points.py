@@ -458,11 +458,6 @@ def opendb(
     return ibs
 
 
-def start(*args, **kwargs):
-    """ alias for main() """  # + main.__doc__
-    return main(*args, **kwargs)
-
-
 def opendb_test(gui=True, dbdir=None, defaultdb='cache', allow_newdir=False, db=None):
     """ alias for main() """  # + main.__doc__
     from wbia.init import sysres
