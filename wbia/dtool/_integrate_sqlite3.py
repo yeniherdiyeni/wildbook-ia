@@ -2,13 +2,16 @@
 """Integrates numpy types into sqlite3"""
 import io
 import uuid
-from sqlite3 import register_adapter, register_converter
 
 import numpy as np
 import utool as ut
 
 
-__all__ = ()
+__all__ = (
+    'register_adapters',
+    '_read_numpy_from_sqlite3',
+    '_read_uuid_from_sqlite3',
+)
 
 
 def _read_numpy_from_sqlite3(blob):
@@ -58,7 +61,7 @@ def _write_uuid_to_sqlite3(uuid_):
     return memoryview(uuid_.bytes_le)
 
 
-def register_numpy_dtypes():
+def register_numpy_dtypes(register_adapter, register_converter):
     py_int_type = int
     for dtype in (
         np.int8,
@@ -75,7 +78,7 @@ def register_numpy_dtypes():
     register_adapter(np.float64, float)
 
 
-def register_numpy():
+def register_numpy(register_adapter, register_converter):
     """
     Tell SQL how to deal with numpy arrays
     Utility function allowing numpy arrays to be stored as raw blob data
@@ -85,18 +88,18 @@ def register_numpy():
     register_adapter(np.ndarray, _write_numpy_to_sqlite3)
 
 
-def register_uuid():
+def register_uuid(register_adapter, register_converter):
     """ Utility function allowing uuids to be stored in sqlite """
     register_converter('UUID', _read_uuid_from_sqlite3)
     register_adapter(uuid.UUID, _write_uuid_to_sqlite3)
 
 
-def register_dict():
+def register_dict(register_adapter, register_converter):
     register_converter('DICT', _read_dict_from_sqlite3)
     register_adapter(dict, _write_dict_to_sqlite3)
 
 
-def register_list():
+def register_list(register_adapter, register_converter):
     register_converter('LIST', ut.from_json)
     register_adapter(list, ut.to_json)
 
@@ -107,9 +110,10 @@ def register_list():
 #     register_adapter(bool, _write_bool)
 
 
-register_numpy_dtypes()
-register_numpy()
-register_uuid()
-register_dict()
-register_list()
-# register_bool()  # TODO
+def register_adapters(register_adapter, register_converter):
+    register_numpy_dtypes(register_adapter, register_converter)
+    register_numpy(register_adapter, register_converter)
+    register_uuid(register_adapter, register_converter)
+    register_dict(register_adapter, register_converter)
+    register_list(register_adapter, register_converter)
+    # register_bool()  # TODO
