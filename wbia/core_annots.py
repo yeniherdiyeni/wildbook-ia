@@ -1315,6 +1315,9 @@ def compute_fgweights(depc, fid_list, pcid_list, config=None):
     cid_list = depc.get_ancestor_rowids('feat', fid_list, 'chips')
     chipsize_list = depc.get_native('chips', cid_list, ('width', 'height'))
     kpts_list = depc.get_native('feat', fid_list, 'kpts')
+    from wbia.dtool import lite
+
+    kpts_list = [lite._read_numpy_from_sqlite3(kpts) for kpts in kpts_list]
     # Force grayscale reading of chips
     arg_iter = zip(kpts_list, probchip_list, chipsize_list)
     featweight_gen = ut.generate2(
@@ -1333,6 +1336,7 @@ def compute_fgweights(depc, fid_list, pcid_list, config=None):
 
 
 def gen_featweight_worker(kpts, probchip, chipsize):
+    print(f'gen_featweight_worker(kpts={kpts}, probchip={probchip}, chipsize={chipsize})')
     """
     Function to be parallelized by multiprocessing / joblib / whatever.
     Must take in one argument to be used by multiprocessing.map_async
@@ -1476,6 +1480,7 @@ def compute_pairwise_vsone(depc, qaids, daids, config):
         zip(qaids, daids), length=len(qaids), lbl='compute vsone', bs=True, freq=1
     ):
         annot1 = configured_lazy_annots[qannot_cfg][qaid]
+        print(f'annot1={annot1}')
         annot2 = configured_lazy_annots[dannot_cfg][daid]
         match = vt.PairwiseMatch(annot1, annot2)
         match.apply_all(config)
