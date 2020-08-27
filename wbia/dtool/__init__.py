@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa
 
-# The following is meant to be used in place of `import sqlite3`
-# because importing it from here will ensure our type integrations are loaded.
-# See `_integrate_sqlite3` module for details.
+# BBB (27-Aug-12020) Referenced from a few locations, but no longer necessary
+#     with the import of dbapi_integrations in wbia.__init__.
 import sqlite3
+import sqlite3 as lite
 
-from wbia.dtool import _integrate_sqlite3 as lite
 from wbia.dtool import base
 from wbia.dtool import sql_control
 from wbia.dtool import depcache_control

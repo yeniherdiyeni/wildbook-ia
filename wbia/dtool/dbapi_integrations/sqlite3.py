@@ -8,7 +8,7 @@ import numpy as np
 import utool as ut
 
 
-__all__ = ()
+__all__ = ('integrate',)
 
 
 def _read_numpy_from_sqlite3(blob):
@@ -107,9 +107,11 @@ def register_list():
 #     register_adapter(bool, _write_bool)
 
 
-register_numpy_dtypes()
-register_numpy()
-register_uuid()
-register_dict()
-register_list()
-# register_bool()  # TODO
+def integrate():
+    """Integrate with the sqlite3 library to work with our custom types"""
+    register_numpy_dtypes()
+    register_numpy()
+    register_uuid()
+    register_dict()
+    register_list()
+    # register_bool()  # TODO

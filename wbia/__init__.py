@@ -20,6 +20,16 @@ except ImportError as ex:
     print('[wbia !!!] Perhaps try super_setup.py pull')
     raise
 
+
+# Integrate the various DBAPI libraries
+# The following is meant to be imported high enough in the package
+# so that the logic is guaranteed to be called prior to use.
+from wbia.dtool.dbapi_integrations import integrate
+
+integrate()
+del integrate  # no longer needed
+
+
 ut.noinject(__name__, '[wbia.__init__]')
 if ut.VERBOSE:
     print('[wbia] importing wbia __init__')

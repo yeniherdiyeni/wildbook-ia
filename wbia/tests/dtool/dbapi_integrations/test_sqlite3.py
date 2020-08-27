@@ -5,9 +5,9 @@ import uuid
 import numpy as np
 import pytest
 
-# We do not explicitly call code in this module because
-# importing the following module is execution of the code.
-import wbia.dtool._integrate_sqlite3  # noqa
+# We do not explicitly call code into this module because
+# importing 'wbia' calls the necessary integration code.
+import wbia.dtool.dbapi_integrations.sqlite3  # noqa
 
 
 @pytest.fixture
