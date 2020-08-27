@@ -11,6 +11,7 @@ import os
 import parse
 import re
 import threading
+import sqlite3
 from collections.abc import Mapping, MutableMapping
 from functools import partial
 from os.path import join, exists
@@ -662,7 +663,12 @@ class SQLDatabaseController(object):
     def connect(self):
         """Create a connection for the instance or use the existing connection"""
         # The echo flag is a shortcut to set up SQLAlchemy logging
-        self._engine = sqlalchemy.create_engine(self.uri, echo=False)
+        self._engine = sqlalchemy.create_engine(
+            self.uri,
+            # FIXME (27-Aug-12020) Hardcoded for sqlite
+            connect_args={'detect_types': sqlite3.PARSE_DECLTYPES},
+            echo=False,
+        )
         self._connection = self._engine.connect()
         return self._connection
 
@@ -692,7 +698,12 @@ class SQLDatabaseController(object):
         uri = self.uri
         if self.readonly:
             uri += '?mode=ro'
-        engine = sqlalchemy.create_engine(uri, echo=False)
+        engine = sqlalchemy.create_engine(
+            uri,
+            # FIXME (27-Aug-12020) Hardcoded for sqlite
+            connect_args={'detect_types': sqlite3.PARSE_DECLTYPES},
+            echo=False,
+        )
         connection = engine.connect()
 
         # Keep track of what thead this was started in
@@ -834,7 +845,12 @@ class SQLDatabaseController(object):
         logger.info('[sql] reboot')
         self.connection.close()
         del self.connection
-        self._engine = sqlalchemy.create_engine(self.uri, echo=False)
+        self._engine = sqlalchemy.create_engine(
+            self.uri,
+            # FIXME (27-Aug-12020) Hardcoded for sqlite
+            connect_args={'detect_types': sqlite3.PARSE_DECLTYPES},
+            echo=False,
+        )
         self.connection = self._engine.connect()
         lite.register_adapters(
             self.connection.dialect.dbapi.register_adapter,
