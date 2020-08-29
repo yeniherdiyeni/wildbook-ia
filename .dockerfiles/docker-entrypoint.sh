@@ -1,8 +1,4 @@
 #!/bin/bash
 
-if [ -d /code ]; then
-    pip uninstall -y wildbook-ia
-    cd /code && pip install -e ".[tests]"
-fi
-
+# Catch all for CMD or 'command' in docker-compose
 exec $@
